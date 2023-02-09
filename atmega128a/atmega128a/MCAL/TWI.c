@@ -19,14 +19,6 @@
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
 */
 
-// #include <math.h>
-// #include <stdlib.h>
-// #include <inttypes.h>
-// #include <avr/io.h>
-// #include <avr/interrupt.h>
-// #include <compat/twi.h>
-// #include "Arduino.h" // for digitalWrite
-
 #include "Std_types.h"
 #include "MemMap.h"
 #include "twi.h"
