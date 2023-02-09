@@ -44,9 +44,11 @@ C_SRCS +=  \
 ../main/main.c \
 ../MCAL/ADC.c \
 ../MCAL/DIO.c \
-../MCAL/DIO_lcfg.c \
-../HAL/LCD.c \
+../MCAL/DIO_cfg.c \
 ../HAL/sensors.c \
+../MCAL/I2C_Master_C_file.c \
+../MCAL/I2C_Slave_C_File.c \
+../MCAL/TWI.c \
 ../MCAL/USART0.c \
 ../MCAL/USART1.c \
 ../Services/USART_Services.c
@@ -62,9 +64,11 @@ OBJS +=  \
 main/main.o \
 MCAL/ADC.o \
 MCAL/DIO.o \
-MCAL/DIO_lcfg.o \
-HAL/LCD.o \
+MCAL/DIO_cfg.o \
 HAL/sensors.o \
+MCAL/I2C_Master_C_file.o \
+MCAL/I2C_Slave_C_File.o \
+MCAL/TWI.o \
 MCAL/USART0.o \
 MCAL/USART1.o \
 Services/USART_Services.o
@@ -73,9 +77,11 @@ OBJS_AS_ARGS +=  \
 main/main.o \
 MCAL/ADC.o \
 MCAL/DIO.o \
-MCAL/DIO_lcfg.o \
-HAL/LCD.o \
+MCAL/DIO_cfg.o \
 HAL/sensors.o \
+MCAL/I2C_Master_C_file.o \
+MCAL/I2C_Slave_C_File.o \
+MCAL/TWI.o \
 MCAL/USART0.o \
 MCAL/USART1.o \
 Services/USART_Services.o
@@ -84,9 +90,11 @@ C_DEPS +=  \
 main/main.d \
 MCAL/ADC.d \
 MCAL/DIO.d \
-MCAL/DIO_lcfg.d \
-HAL/LCD.d \
+MCAL/DIO_cfg.d \
 HAL/sensors.d \
+MCAL/I2C_Master_C_file.d \
+MCAL/I2C_Slave_C_File.d \
+MCAL/TWI.d \
 MCAL/USART0.d \
 MCAL/USART1.d \
 Services/USART_Services.d
@@ -95,9 +103,11 @@ C_DEPS_AS_ARGS +=  \
 main/main.d \
 MCAL/ADC.d \
 MCAL/DIO.d \
-MCAL/DIO_lcfg.d \
-HAL/LCD.d \
+MCAL/DIO_cfg.d \
 HAL/sensors.d \
+MCAL/I2C_Master_C_file.d \
+MCAL/I2C_Slave_C_File.d \
+MCAL/TWI.d \
 MCAL/USART0.d \
 MCAL/USART1.d \
 Services/USART_Services.d
@@ -137,14 +147,7 @@ MCAL/DIO.o: ../MCAL/DIO.c
 	@echo Finished building: $<
 	
 
-MCAL/DIO_lcfg.o: ../MCAL/DIO_lcfg.c
-	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : 5.4.0
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I".." -I"../SERVICES" -I"../main" -I"../HAL" -I"../MCAL"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu=atmega128a -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega128a" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
-	@echo Finished building: $<
-	
-
-HAL/LCD.o: ../HAL/LCD.c
+MCAL/DIO_cfg.o: ../MCAL/DIO_cfg.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I".." -I"../SERVICES" -I"../main" -I"../HAL" -I"../MCAL"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu=atmega128a -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega128a" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
@@ -152,6 +155,27 @@ HAL/LCD.o: ../HAL/LCD.c
 	
 
 HAL/sensors.o: ../HAL/sensors.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I".." -I"../SERVICES" -I"../main" -I"../HAL" -I"../MCAL"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu=atmega128a -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega128a" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+MCAL/I2C_Master_C_file.o: ../MCAL/I2C_Master_C_file.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I".." -I"../SERVICES" -I"../main" -I"../HAL" -I"../MCAL"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu=atmega128a -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega128a" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+MCAL/I2C_Slave_C_File.o: ../MCAL/I2C_Slave_C_File.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I".." -I"../SERVICES" -I"../main" -I"../HAL" -I"../MCAL"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu=atmega128a -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega128a" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+MCAL/TWI.o: ../MCAL/TWI.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I".." -I"../SERVICES" -I"../main" -I"../HAL" -I"../MCAL"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu=atmega128a -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega128a" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

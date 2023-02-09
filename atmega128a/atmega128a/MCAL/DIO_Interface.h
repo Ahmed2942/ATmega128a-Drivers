@@ -3,13 +3,9 @@
 #define DIO_INTERFACE_H_
 
 
- 
- #define F_CPU 1000000UL
- #include "util/delay.h"
-
- #include "Std_types.h"
- #include "MemMap.h"
- #include "UTILS.h"
+#include "Std_types.h"
+#include "MemMap.h"
+#include "UTILS.h"
 
 /******************************enums**************************/
 typedef enum{
@@ -92,7 +88,7 @@ typedef enum
 	PD,
 	PE,
 	PF,
-	PG,
+	PG
 	
 }DIO_Port_type;
 

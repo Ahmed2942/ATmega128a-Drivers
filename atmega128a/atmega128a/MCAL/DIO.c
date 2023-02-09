@@ -2,6 +2,9 @@
 #include "DIO_Interface.h"
 #include "MemMap.h"
 
+#define F_CPU 1000000UL
+#include "util/delay.h"
+
  void DIO_Init(void)
  {
 	 DIO_Pin_type i;
