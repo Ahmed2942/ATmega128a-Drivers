@@ -116,9 +116,7 @@ void twi_releaseBus(void);
 /* data transmitted, NACK received */
 #define TW_MT_DATA_NACK		0x30
 
-/** \ingroup util_twi
-    \def TW_MT_ARB_LOST
-    arbitration lost in SLA+W or data */
+/* arbitration lost in SLA+W or data */
 #define TW_MT_ARB_LOST		0x38
 
 /* Master Receiver */
