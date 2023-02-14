@@ -25,10 +25,10 @@ typedef float f32;
 typedef double f64;
 
 #define NULLPTR ((void*)0)
+#define NULL (0)
 
 typedef enum {
-	NULL,
-	OK,
+	OK
 	NOK,
 	OUT_OF_RANGE
 } Error_type;
