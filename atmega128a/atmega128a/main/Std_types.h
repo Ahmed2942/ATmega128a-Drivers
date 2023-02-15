@@ -24,11 +24,11 @@ typedef unsigned long long* p64;
 typedef float f32;
 typedef double f64;
 
-#define NULLPTR ((void*)0)
 #define NULL (0)
+#define NULLPTR ((void*)0)
 
 typedef enum {
-	OK
+	OK,
 	NOK,
 	OUT_OF_RANGE
 } Error_type;

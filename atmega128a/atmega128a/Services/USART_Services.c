@@ -1,5 +1,3 @@
-
-
 #include "USART_Services.h"
 
 void USART0_SendString (u8*str)
@@ -283,10 +281,10 @@ void USART0_BCM_Runnabe(u8*str)
 	}
 }
 
-static void FUNC0_TX(void)
-{
-	flag=1;
-}
+//static void FUNC0_TX(void)
+//{
+	//flag=1;
+//}
 /********************************************************************/
 
 static u8*Tx1_str[20]; //this become array of pointers to enable us to send many strings one after the other
@@ -357,10 +355,10 @@ void USART1_BCM_Runnabe(u8*str)
 	}
 }
 
-static void FUNC1_TX(void)
-{
-	flag1=1;
-}
+//static void FUNC1_TX(void)
+//{
+	//flag1=1;
+//}
 
 /*********************************************************************************/
 

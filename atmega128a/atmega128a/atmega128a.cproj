@@ -159,22 +159,10 @@
     <Compile Include="HAL\sensors.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="MCAL\I2C_Master_C_file.c">
+    <Compile Include="MCAL\I2C.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="MCAL\I2C_Master_H_file.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MCAL\I2C_Slave_C_File.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MCAL\I2C_Slave_H_File.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MCAL\TWI.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MCAL\TWI.h">
+    <Compile Include="MCAL\I2C.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="MCAL\USART0.c">

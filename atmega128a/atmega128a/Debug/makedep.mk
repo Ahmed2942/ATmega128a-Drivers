@@ -12,11 +12,7 @@ MCAL\DIO_cfg.c
 
 HAL\sensors.c
 
-MCAL\I2C_Master_C_file.c
-
-MCAL\I2C_Slave_C_File.c
-
-MCAL\TWI.c
+MCAL\I2C.c
 
 MCAL\USART0.c
 
