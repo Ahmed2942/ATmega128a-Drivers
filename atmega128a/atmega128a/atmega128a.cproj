@@ -126,6 +126,12 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="HAL\GPS.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HAL\GPS.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main\main.c">
       <SubType>compile</SubType>
     </Compile>
