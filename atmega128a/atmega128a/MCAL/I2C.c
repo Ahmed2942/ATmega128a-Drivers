@@ -3,35 +3,50 @@
 #include "I2C.h"								/* Include I2C header file */
 
 
-/************************************************* TWI Master *************************************************/
+u8 I2C_receivedBufferWriteIndex;
+u8 I2C_receivedBufferReadIndex;
+u8 I2C_receivedBufferLength;
+u8 I2C_receivedBuffer[I2C_BUFFER_LENGTH];
+
+void I2C_SetFrequency(u32 frequency)
+{
+  TWBR = ((F_CPU / frequency) - 16) / 2;
+  
+  /* twi bit rate formula from atmega128 manual pg 204
+  SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR))
+  note: TWBR should be 10 or higher for master mode
+  It is 72 for a 16mhz Wiring board with 100kHz TWI */
+}
+
+/************************************************* I2C Master *************************************************/
 
 void I2C_Master_Init()										/* I2C initialize function */
 {
 	TWSR = 0x00;									
-	TWBR = BITRATE;											/* Get bit rate register value by formula */
+	I2C_setFrequency(SCL_CLK);										/* Get bit rate register value by formula */
 }	
 
 u8 I2C_Start(u8 write_address)								/* I2C start function */
 {
-	u8 status;												/* Declare variable */
+	u8 status = 0xff;;										/* Declare variable */
 	TWCR = (1<<TWSTA)|(1<<TWEN)|(1<<TWINT);					/* Enable TWI, generate start condition and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (start condition) */
 	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */
 	if(status != TW_START)									/* Check weather start condition transmitted successfully or not? */
-	return 0;												/* If not then return 0 to indicate start condition fail */
+	return TW_START;										/* If not then return 0 to indicate start condition fail */
 	TWDR = write_address;									/* If yes then write SLA+W in TWI data register */
 	TWCR = (1<<TWEN)|(1<<TWINT);							/* Enable TWI and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (Write operation) */
 	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */	
-	if(status == TW_MT_SLA_ACK)							/* Check weather SLA+W transmitted & ack received or not? */
-	return 1;												/* If yes then return 1 to indicate ack received i.e. ready to accept data byte */
+	if(status == TW_MT_SLA_ACK)								/* Check weather SLA+W transmitted & ack received or not? */
+	return TW_MT_SLA_ACK;									/* If yes then return 1 to indicate ack received i.e. ready to accept data byte */
 	if(status == TW_MT_SLA_NACK)							/* Check weather SLA+W transmitted & nack received or not? */
-	return 2;												/* If yes then return 2 to indicate nack received i.e. device is busy */
+	return TW_MT_SLA_NACK;									/* If yes then return 2 to indicate nack received i.e. device is busy */
 	else
-	return 3;												/* Else return 3 to indicate SLA+W failed */
+	return 0xff;											/* Else return 3 to indicate SLA+W failed */
 }
 
-void I2C_Start_Wait(u8 write_address)						/* I2C start wait function */
+void I2C_StartWait(u8 write_address)						/* I2C start wait function */
 {
 	u8 status;												/* Declare variable */
 	while(1)
@@ -54,9 +69,9 @@ void I2C_Start_Wait(u8 write_address)						/* I2C start wait function */
 	}
 }
 
-u8 I2C_Repeated_Start(u8 read_address)						/* I2C repeated start function */
+u8 I2C_RepeatedStart(u8 read_address)						/* I2C repeated start function */
 {
-	u8 status;												/* Declare variable */
+	u8 status = 0xff;;												/* Declare variable */
 	TWCR = (1<<TWSTA)|(1<<TWEN)|(1<<TWINT);					/* Enable TWI, generate start condition and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (start condition) */
 	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */
@@ -66,12 +81,12 @@ u8 I2C_Repeated_Start(u8 read_address)						/* I2C repeated start function */
 	TWCR = (1<<TWEN)|(1<<TWINT);							/* Enable TWI and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (Write operation) */
 	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */
-	if(status == TW_MR_SLA_ACK)							/* Check weather SLA+R transmitted & ack received or not? */
-	return 1;												/* If yes then return 1 to indicate ack received */ 
-	if(status == TW_MT_SLA_NACK)							/* Check weather SLA+R transmitted & nack received or not? */
-	return 2;												/* If yes then return 2 to indicate nack received i.e. device is busy */
+	if(status == TW_MR_SLA_ACK)								/* Check weather SLA+R transmitted & ack received or not? */
+	return TW_MR_SLA_ACK;									/* If yes then return 1 to indicate ack received */ 
+	if(status == TW_MR_SLA_NACK)							/* Check weather SLA+R transmitted & nack received or not? */
+	return TW_MR_SLA_ACK;									/* If yes then return 2 to indicate nack received i.e. device is busy */
 	else
-	return 3;												/* Else return 3 to indicate SLA+W failed */
+	return 0xff;											/* Else return 3 to indicate SLA+W failed */
 }
 
 void I2C_Stop()												/* I2C stop function */
@@ -88,45 +103,96 @@ u8 I2C_Write(u8 data)										/* I2C write function */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (Write operation) */
 	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */
 	if(status == TW_MT_DATA_ACK)							/* Check weather data transmitted & ack received or not? */
-	return 0;												/* If yes then return 0 to indicate ack received */
+	return TW_MT_DATA_ACK;									/* If yes then return 0 to indicate ack received */
 	if(status == TW_MT_DATA_NACK)							/* Check weather data transmitted & nack received or not? */
-	return 1;												/* If yes then return 1 to indicate nack received */
+	return TW_MT_DATA_NACK;									/* If yes then return 1 to indicate nack received */
 	else
-	return 2;												/* Else return 2 to indicate data transmission failed */
+	return 0xff;			   								/* Else return 2 to indicate data transmission failed */
 }
 
 
 
-u8 I2C_Read_Ack()											/* I2C read ack function */
+u8 I2C_ReadAck()											/* I2C read ack function */
 {
 	TWCR=(1<<TWEN)|(1<<TWINT)|(1<<TWEA);					/* Enable TWI, generation of ack and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (read operation) */
+	
 	return TWDR;											/* Return received data */
 }	
 
-u8 I2C_Read_Nack()											/* I2C read nack function */
+u8 I2C_ReadNack()											/* I2C read nack function */
 {
 	TWCR=(1<<TWEN)|(1<<TWINT);								/* Enable TWI and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (read operation) */
 	return TWDR;											/* Return received data */
-}	
+}
 
-void I2C_Reply(u8 ack)										/* I2C read nack function */
+u8 I2C_ReadBuffer(void)
 {
-	// transmit master read ready signal, with or without ack
-	if(ack) {
-		TWCR = (1<<TWEN) | (1<<TWIE) | (1<<TWINT) | (1<<TWEA);
+	u8 value = -1;
+
+	// get each successive byte on each call
+	if(I2C_receivedBufferReadIndex <= I2C_receivedBufferWriteIndex){
+		value = I2C_receivedBuffer[I2C_receivedBufferReadIndex++];
 	}
-	else {
-		TWCR = (1<<TWEN) | (1<<TWIE) | (1<<TWINT);
+
+	return value;
+}
+
+// Request number of bytes equal to 'quantity' from 'address' and return number of remaining bytes
+u8 I2C_RequestFrom(u8 address, u8 quantity)
+{
+	// clamp to buffer length
+	if(quantity > I2C_BUFFER_LENGTH){
+		I2C_ReadFrom(address, I2C_BUFFER_LENGTH);
+		return quantity - I2C_BUFFER_LENGTH;
+	}
+	return 0;
+}
+
+void I2C_ReadFrom(u8 address, u8 length)
+{
+	// initialize buffer iteration vars
+	I2C_receivedBufferWriteIndex = 0;
+	I2C_receivedBufferLength = length-1;  
+	// This is not intuitive, read on...
+	// On receive, the previously configured ACK/NACK setting is transmitted in
+	// response to the received byte before the interrupt is signalled. 
+	// Therefor we must actually set NACK when the _next_ to last byte is
+	// received, causing that NACK to be sent in response to receiving the last
+	// expected byte of data.
+
+	// wait for read operation to complete
+	while(I2C_receivedBufferWriteIndex < I2C_receivedBufferLength){
+		I2C_receivedBuffer[I2C_receivedBufferWriteIndex++] = I2C_ReadAck();
+	}
+	I2C_receivedBuffer[I2C_receivedBufferWriteIndex++] = I2C_ReadNack();
+}
+
+
+void I2C_WriteTo(u8 address, u8* data, u8 length)
+{
+	u8 i;
+	// ensure data will fit into buffer
+	if(I2C_BUFFER_LENGTH < length){
+		return;
+	}
+
+	// copy data to I2C buffer
+	for(i = 0; i < length; ++i){
+		I2C_Write(data[i]);
 	}
 }
 
-/************************************************* TWI Slave *************************************************/
+
+
+
+
+/************************************************* I2C Slave *************************************************/
 
 void I2C_Slave_Init(u8 slave_address)
 {
-	TWAR = slave_address;									/* Assign address in TWI address register */
+	TWAR = slave_address;									/* Assign address in I2C address register */
 	TWCR = (1<<TWEN) | (1<<TWEA) | (1<<TWINT);				/* Enable TWI, Enable ack generation, clear TWI interrupt */
 }
 
@@ -134,7 +200,7 @@ u8 I2C_Slave_Listen()
 {
 	while(1)
 	{
-		u8 status;															/* Declare variable */
+		u8 status = 0xff;;													/* Declare variable */
 		while(!(TWCR & (1<<TWINT)));										/* Wait to be addressed */
 		status = TWSR & 0xF8;												/* Read TWI status register with masking lower three bits */
 		if(status == TW_SR_SLA_ACK || status == TW_SR_ARB_LOST_SLA_ACK)		/* Check weather own SLA+W received & ack returned (TWEA = 1) */
@@ -150,7 +216,7 @@ u8 I2C_Slave_Listen()
 
 u8 I2C_Slave_Transmit(u8 data)
 {
-	u8 status;
+	u8 status = 0xff;;
 	TWDR = data;											/* Write data to TWDR to be transmitted */
 	TWCR = (1<<TWEN)|(1<<TWINT)|(1<<TWEA);					/* Enable TWI and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (Write operation) */
@@ -175,7 +241,7 @@ u8 I2C_Slave_Transmit(u8 data)
 
 u8 I2C_Slave_Receive()
 {
-	u8 status;															/* Declare variable */
+	u8 status = 0xff;;													/* Declare variable */
 	TWCR=(1<<TWEN)|(1<<TWEA)|(1<<TWINT);								/* Enable TWI, generation of ack and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));										/* Wait until TWI finish its current job (read operation) */
 	status = TWSR & 0xF8;												/* Read TWI status register with masking lower three bits */
@@ -191,376 +257,3 @@ u8 I2C_Slave_Receive()
 	else
 	return -2;															/* Else return 1 */
 }
-
-/****************************************** Interrupt Handling ******************************************/
-
-//u8 twi_readFrom(u8 address, u8* data, u8 length, u8 sendStop)
-//{
-  //u8 i;
-//
-  //// ensure data will fit into buffer
-  //if(TWI_BUFFER_LENGTH < length){
-    //return 0;
-  //}
-//
-  //// wait until twi is ready, become master receiver
-  //while(TWI_READY != twi_state);
-  //twi_state = TWI_MRX;
-  //twi_sendStop = sendStop;
-  //// reset error state (0xFF.. no error occured)
-  //twi_error = 0xFF;
-//
-  //// initialize buffer iteration vars
-  //twi_masterBufferIndex = 0;
-  //twi_masterBufferLength = length-1;  // This is not intuitive, read on...
-  //// On receive, the previously configured ACK/NACK setting is transmitted in
-  //// response to the received byte before the interrupt is signalled. 
-  //// Therefor we must actually set NACK when the _next_ to last byte is
-  //// received, causing that NACK to be sent in response to receiving the last
-  //// expected byte of data.
-//
-  //// build sla+w, slave device address + w bit
-  //twi_slarw = TW_READ;
-  //twi_slarw |= address << 1;
-//
-  //if (TRUE == twi_inRepStart) {
-    //// if we're in the repeated start state, then we've already sent the start,
-    //// (@@@ we hope), and the TWI statemachine is just waiting for the address byte.
-    //// We need to remove ourselves from the repeated start state before we enable interrupts,
-    //// since the ISR is ASYNC, and we could get confused if we hit the ISR before cleaning
-    //// up. Also, don't enable the START interrupt. There may be one pending from the 
-    //// repeated start that we sent ourselves, and that would really confuse things.
-    //twi_inRepStart = FALSE;			// remember, we're dealing with an ASYNC ISR
-    //do {
-      //TWDR = twi_slarw;
-    //} while(TWCR & (1<<TWWC));
-    //TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN) | (1<<TWIE);	// enable INTs, but not START
-  //}
-  //else
-    //// send start condition
-    //TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN) | (1<<TWIE) | (1<<TWSTA);
-//
-  //// wait for read operation to complete
-  //while(TWI_MRX == twi_state);
-//
-  //if (twi_masterBufferIndex < length)
-    //length = twi_masterBufferIndex;
-//
-  //// copy twi buffer to data
-  //for(i = 0; i < length; ++i){
-    //data[i] = twi_masterBuffer[i];
-  //}
-	//
-  //return length;
-//}
-//
-///* 
- //* Function twi_writeTo
- //* Desc     attempts to become twi bus master and write a
- //*          series of bytes to a device on the bus
- //* Input    address: 7bit i2c device address
- //*          data: pointer to byte array
- //*          length: number of bytes in array
- //*          wait: boolean indicating to wait for write or not
- //*          sendStop: boolean indicating whether or not to send a stop at the end
- //* Output   0 .. success
- //*          1 .. length to long for buffer
- //*          2 .. address send, NACK received
- //*          3 .. data send, NACK received
- //*          4 .. other twi error (lost bus arbitration, bus error, ..)
- //*/
-//u8 twi_writeTo(u8 address, u8* data, u8 length, u8 wait, u8 sendStop)
-//{
-  //u8 i;
-//
-  //// ensure data will fit into buffer
-  //if(TWI_BUFFER_LENGTH < length){
-    //return 1;
-  //}
-//
-  //// wait until twi is ready, become master transmitter
-  //while(TWI_READY != twi_state){
-    //continue;
-  //}
-  //twi_state = TWI_MTX;
-  //twi_sendStop = sendStop;
-  //// reset error state (0xFF.. no error occured)
-  //twi_error = 0xFF;
-//
-  //// initialize buffer iteration vars
-  //twi_masterBufferIndex = 0;
-  //twi_masterBufferLength = length;
-  //
-  //// copy data to twi buffer
-  //for(i = 0; i < length; ++i){
-    //twi_masterBuffer[i] = data[i];
-  //}
-  //
-  //// build sla+w, slave device address + w bit
-  //twi_slarw = TW_WRITE;
-  //twi_slarw |= address << 1;
-  //
-  //// if we're in a repeated start, then we've already sent the START
-  //// in the ISR. Don't do it again.
-  ////
-  //if (TRUE == twi_inRepStart) {
-    //// if we're in the repeated start state, then we've already sent the start,
-    //// (@@@ we hope), and the TWI statemachine is just waiting for the address byte.
-    //// We need to remove ourselves from the repeated start state before we enable interrupts,
-    //// since the ISR is ASYNC, and we could get confused if we hit the ISR before cleaning
-    //// up. Also, don't enable the START interrupt. There may be one pending from the 
-    //// repeated start that we sent outselves, and that would really confuse things.
-    //twi_inRepStart = FALSE;			// remember, we're dealing with an ASYNC ISR
-    //do {
-      //TWDR = twi_slarw;				
-    //} while(TWCR & (1<<TWWC));
-    //TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN) | (1<<TWIE);	// enable INTs, but not START
-  //}
-  //else
-    //// send start condition
-    //TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN) | (1<<TWIE) | (1<<TWSTA);	// enable INTs
-//
-  //// wait for write operation to complete
-  //while(wait && (TWI_MTX == twi_state)){
-    //continue;
-  //}
-  //
-  //if (twi_error == 0xFF)
-    //return 0;	// success
-  //else if (twi_error == TW_MT_SLA_NACK)
-    //return 2;	// error: address send, nack received
-  //else if (twi_error == TW_MT_DATA_NACK)
-    //return 3;	// error: data send, nack received
-  //else
-    //return 4;	// other twi error
-//}
-//
-///* 
- //* Function twi_transmit
- //* Desc     fills slave tx buffer with data
- //*          must be called in slave tx event callback
- //* Input    data: pointer to byte array
- //*          length: number of bytes in array
- //* Output   1 length too long for buffer
- //*          2 not slave transmitter
- //*          0 ok
- //*/
-//u8 twi_transmit(const u8* data, u8 length)
-//{
-  //u8 i;
-//
-  //// ensure data will fit into buffer
-  //if(TWI_BUFFER_LENGTH < (twi_txBufferLength+length)){
-    //return 1;
-  //}
-  //
-  //// ensure we are currently a slave transmitter
-  //if(TWI_STX != twi_state){
-    //return 2;
-  //}
-  //
-  //// set length and copy data into tx buffer
-  //for(i = 0; i < length; ++i){
-    //twi_txBuffer[twi_txBufferLength+i] = data[i];
-  //}
-  //twi_txBufferLength += length;
-  //
-  //return 0;
-//}
-//
-///* 
- //* Function twi_attachSlaveRxEvent
- //* Desc     sets function called before a slave read operation
- //* Input    function: callback function to use
- //* Output   none
- //*/
-//
-///* 
- //* Function twi_attachSlaveRxEvent
- //* Desc     sets function called before a slave read operation
- //* Input    function: callback function to use
- //* Output   none
-//*/
-//void twi_attachSlaveRxEvent( void (*function)(u8*, u32) )
-//{
-  //twi_onSlaveReceive = function;
-//}
-//
-///* 
- //* Function twi_attachSlaveTxEvent
- //* Desc     sets function called before a slave write operation
- //* Input    function: callback function to use
- //* Output   none
-//*/
-//void I2C_attachSlaveTxEvent( void (*function)(void) )
-//{
-  //twi_onSlaveTransmit = function;
-//}
-//
-//ISR(TWI_vect)
-//{
-  //switch(TW_STATUS)
-  //{
-	//// All Master
-	//case TW_START:     // sent start condition
-	//case TW_REP_START: // sent repeated start condition
-	//// copy device address and r/w bit to output register and ack
-	//TWDR = twi_slarw;
-	//I2C_Reply(1);
-	//break;
-//
-	//// Master Transmitter
-	//case TW_MT_SLA_ACK:  // slave receiver acked address
-	//case TW_MT_DATA_ACK: // slave receiver acked data
-	//// if there is data to send, send it, otherwise stop
-	//if(twi_masterBufferIndex < twi_masterBufferLength)
-	//{
-		//// copy data to output register and ack
-		//TWDR = twi_masterBuffer[twi_masterBufferIndex++];
-		//I2C_Reply(1);
-	//}
-	//else
-	//{
-		//if(twi_sendStop)
-		//twi_stop();
-		//else
-		//{
-			//twi_inRepStart = TRUE;	// we're gonna send the START
-			//// don't enable the interrupt. We'll generate the start, but we
-			//// avoid handling the interrupt until we're in the next transaction,
-			//// at the point where we would normally issue the start.
-			//TWCR = (1<<TWINT) | (1<<TWSTA)| (1<<TWEN) ;
-			//twi_state = TWI_READY;
-		//}
-	//}
-	//break;
-	//case TW_MT_SLA_NACK:  // address sent, nack received
-	//twi_error = TW_MT_SLA_NACK;
-	//twi_stop();
-	//break;
-	//case TW_MT_DATA_NACK: // data sent, nack received
-	//twi_error = TW_MT_DATA_NACK;
-	//twi_stop();
-	//break;
-	//case TW_MT_ARB_LOST: // lost bus arbitration
-	//twi_error = TW_MT_ARB_LOST;
-	//twi_releaseBus();
-	//break;
-//
-	//// Master Receiver
-	//case TW_MR_DATA_ACK: // data received, ack sent
-	//// put byte into buffer
-	//twi_masterBuffer[twi_masterBufferIndex++] = TWDR;
-	//case TW_MR_SLA_ACK:  // address sent, ack received
-	//// ack if more bytes are expected, otherwise nack
-	//if(twi_masterBufferIndex < twi_masterBufferLength){
-		//twi_reply(1);
-		//}else{
-		//twi_reply(0);
-	//}
-	//break;
-	//case TW_MR_DATA_NACK: // data received, nack sent
-	//// put final byte into buffer
-	//twi_masterBuffer[twi_masterBufferIndex++] = TWDR;
-	//if(twi_sendStop)
-	//twi_stop();
-	//else {
-		//twi_inRepStart = TRUE;	// we're gonna send the START
-		//// don't enable the interrupt. We'll generate the start, but we
-		//// avoid handling the interrupt until we're in the next transaction,
-		//// at the point where we would normally issue the start.
-		//TWCR = (1<<TWINT) | (1<<TWSTA)| (1<<TWEN) ;
-		//twi_state = TWI_READY;
-	//}
-	//break;
-	//case TW_MR_SLA_NACK: // address sent, nack received
-	//twi_stop();
-	//break;
-	//// TW_MR_ARB_LOST handled by TW_MT_ARB_LOST case
-//
-	//// Slave Receiver
-	//case TW_SR_SLA_ACK:   // addressed, returned ack
-	//case TW_SR_GCALL_ACK: // addressed generally, returned ack
-	//case TW_SR_ARB_LOST_SLA_ACK:   // lost arbitration, returned ack
-	//case TW_SR_ARB_LOST_GCALL_ACK: // lost arbitration, returned ack
-	//// enter slave receiver mode
-	//twi_state = TWI_SRX;
-	//// indicate that rx buffer can be overwritten and ack
-	//twi_rxBufferIndex = 0;
-	//twi_reply(1);
-	//break;
-	//case TW_SR_DATA_ACK:       // data received, returned ack
-	//case TW_SR_GCALL_DATA_ACK: // data received generally, returned ack
-	//// if there is still room in the rx buffer
-	//if(twi_rxBufferIndex < TWI_BUFFER_LENGTH){
-		//// put byte in buffer and ack
-		//twi_rxBuffer[twi_rxBufferIndex++] = TWDR;
-		//twi_reply(1);
-		//}else{
-		//// otherwise nack
-		//twi_reply(0);
-	//}
-	//break;
-	//case TW_SR_STOP: // stop or repeated start condition received
-	//// ack future responses and leave slave receiver state
-	//twi_releaseBus();
-	//// put a null char after data if there's room
-	//if(twi_rxBufferIndex < TWI_BUFFER_LENGTH){
-		//twi_rxBuffer[twi_rxBufferIndex] = '\0';
-	//}
-	//// callback to user defined callback
-	//twi_onSlaveReceive(twi_rxBuffer, twi_rxBufferIndex);
-	//// since we submit rx buffer to "wire" library, we can reset it
-	//twi_rxBufferIndex = 0;
-	//break;
-	//case TW_SR_DATA_NACK:       // data received, returned nack
-	//case TW_SR_GCALL_DATA_NACK: // data received generally, returned nack
-	//// nack back at master
-	//twi_reply(0);
-	//break;
-		//
-	//// Slave Transmitter
-	//case TW_ST_SLA_ACK:          // addressed, returned ack
-	//case TW_ST_ARB_LOST_SLA_ACK: // arbitration lost, returned ack
-	//// enter slave transmitter mode
-	//twi_state = TWI_STX;
-	//// ready the tx buffer index for iteration
-	//twi_txBufferIndex = 0;
-	//// set tx buffer length to be zero, to verify if user changes it
-	//twi_txBufferLength = 0;
-	//// request for txBuffer to be filled and length to be set
-	//// note: user must call twi_transmit(bytes, length) to do this
-	//twi_onSlaveTransmit();
-	//// if they didn't change buffer & length, initialize it
-	//if(0 == twi_txBufferLength){
-		//twi_txBufferLength = 1;
-		//twi_txBuffer[0] = 0x00;
-	//}
-	//// transmit first byte from buffer, fall
-	//case TW_ST_DATA_ACK: // byte sent, ack returned
-	//// copy data to output register
-	//TWDR = twi_txBuffer[twi_txBufferIndex++];
-	//// if there is more to send, ack, otherwise nack
-	//if(twi_txBufferIndex < twi_txBufferLength){
-		//twi_reply(1);
-		//}else{
-		//twi_reply(0);
-	//}
-	//break;
-	//case TW_ST_DATA_NACK: // received nack, we are done
-	//case TW_ST_LAST_DATA: // received ack, but we are done already!
-	//// ack future responses
-	//twi_reply(1);
-	//// leave slave receiver state
-	//twi_state = TWI_READY;
-	//break;
-//
-	//// All
-	//case TW_NO_INFO:   // no state information
-	//break;
-	//case TW_BUS_ERROR: // bus error, illegal stop/start
-	//twi_error = TW_BUS_ERROR;
-	//twi_stop();
-	//break;
-  //}
-//}
