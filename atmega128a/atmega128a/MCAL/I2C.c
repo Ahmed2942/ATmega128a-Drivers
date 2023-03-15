@@ -132,10 +132,11 @@ u8 I2C_ReadBuffer(void)
 	u8 value = -1;
 
 	// get each successive byte on each call
-	if(I2C_receivedBufferReadIndex <= I2C_receivedBufferWriteIndex){
-		value = I2C_receivedBuffer[I2C_receivedBufferReadIndex++];
-	}
+	if(I2C_receivedBufferReadIndex > I2C_receivedBufferWriteIndex){
 
+		I2C_receivedBufferReadIndex=0;
+	}
+	value = I2C_receivedBuffer[I2C_receivedBufferReadIndex++];
 	return value;
 }
 
