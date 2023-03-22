@@ -1,5 +1,5 @@
-#define F_CPU 8000000UL
 #include "GPS.h"
+#include "LCD.h"
 
 char Latitude_Buffer[15],Longitude_Buffer[15],Time_Buffer[15],Altitude_Buffer[8];
 char degrees_buffer[degrees_buffer_size];   /* save latitude or longitude in degree */
@@ -113,7 +113,7 @@ void convert_to_degrees(char *raw){
 	double value;
 	float decimal_value,temp;
 	
-	S32 degrees;
+	s32 degrees;
 	
 	float position;
 	value = atof(raw);    /* convert string into float for conversion */
@@ -132,9 +132,10 @@ void convert_to_degrees(char *raw){
 /* Function to check data comes from GPS */
 void check_Gps(void)
 {
-	u8 oldsrg = SREG;    //can be neglected
+	//u8 oldsrg = SREG;    //can be neglected
 	cli();
 	char received_char = USART1_ReceiveNoBlock();
+	
 	
 	if(received_char =='$'){                 /* check for '$' */
 		GGA_Index = 0;
@@ -144,6 +145,8 @@ void check_Gps(void)
 	else if(IsItGGAString == true){          /* if true save GGA info. into buffer */
 		if(received_char == ',' ) GGA_Pointers[CommaCounter++] = GGA_Index;     /* store instances of ',' in buffer */
 		GGA_Buffer[GGA_Index++] = received_char;
+		
+		
 	}
 	else if(GGA_CODE[0] == 'G' && GGA_CODE[1] == 'G' && GGA_CODE[2] == 'A'){    /* check for GGA string */
 		IsItGGAString = true;
@@ -152,5 +155,6 @@ void check_Gps(void)
 	else{
 		GGA_CODE[0] = GGA_CODE[1];  GGA_CODE[1] = GGA_CODE[2]; GGA_CODE[2] = received_char;
 	}
-	SREG = oldsrg;
+	//SREG = oldsrg;
+	sei();
 }

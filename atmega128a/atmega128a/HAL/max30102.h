@@ -1,7 +1,6 @@
 /*************************************************** 
- This is a library written for the Maxim MAX30105 Optical Smoke Detector
+ This is a library written for the Maxim MAX30102 Optical Smoke Detector
  It should also work with the MAX30102. However, the MAX30102 does not have a Green LED.
-
  These sensors use I2C to communicate, as well as a single (optional)
  interrupt line that is not currently supported in this driver.
  *****************************************************/
@@ -14,10 +13,10 @@
 #include "Std_types.h"
 #include "millis.h"
 
-//#include "i2c.h"	// library for I2C-communication
+#include "I2C.h"	// library for I2C-communication
 
 
- #define MAX30105_ADDRESS          0x57 //7-bit I2C Address
+#define MAX30102_ADDRESS          0x57 //7-bit I2C Address
 //Note that MAX30102 has the same I2C address and Part ID
 
 #define I2C_SPEED_STANDARD        100000
@@ -27,8 +26,8 @@
 //The catch-all default is 32
 #define I2C_BUFFER_LENGTH 32
  
- 
-bool_t begin(TwoWire &wirePort = Wire, u32 i2cSpeed = I2C_SPEED_STANDARD, u8 i2caddr = MAX30105_ADDRESS);
+bool_t Begin(u32 i2cSpeed, u8 i2caddr);
+//bool_t begin(TwoWire &wirePort = Wire, u32 i2cSpeed = I2C_SPEED_STANDARD, u8 i2caddr = MAX30102_ADDRESS);
 
 u32 getRed(void); //Returns immediate red value
 u32 getIR(void); //Returns immediate IR value
@@ -87,12 +86,14 @@ u8 getRevisionID();
 u8 readPartID();  
 
 // Setup the IC with user selectable settings
-void setup(char powerLevel = 0x1F, char sampleAverage = 4, char ledMode = 3, int sampleRate = 400, int pulseWidth = 411, int adcRange = 4096);
+//void setup(char powerLevel = 0x1F, char sampleAverage = 4, char ledMode = 3, int sampleRate = 400, int pulseWidth = 411, int adcRange = 4096);
+void setup(char powerLevel, char sampleAverage, char ledMode, int sampleRate, int pulseWidth, int adcRange);
+
+
 
 // Low-level I2C communication
 u8 readRegister8(u8 address, u8 reg);
 void writeRegister8(u8 address, u8 reg, u8 value);
-
 
 //activeLEDs is the number of channels turned on, and can be 1 to 3. 2 is common for Red+IR.
 char activeLEDs; //Gets set during setup. Allows check() to calculate how many chars to read from FIFO

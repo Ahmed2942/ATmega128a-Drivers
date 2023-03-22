@@ -1,13 +1,19 @@
+/*
+ * LCD2.h
+ *
+ * Created: 3/21/2023 4:58:38 AM
+ *  Author: souq computer
+ */ 
 
 
-#ifndef LCD_H_
-#define LCD_H_
+#ifndef LCD2_H_
+#define LCD2_H_
 
-#define F_CPU 8000000UL
+
+#define F_CPU 16000000UL
 #include "Std_types.h"
 #include "MemMap.h"
 #include "util/delay.h"
-#include "DIO_Interface.h"
 
 #define _4_BIT  0 // We used it for (if condition)
 #define _8_BIT  1
@@ -16,20 +22,20 @@
 
 #define LCD_MODE  _4_BIT
 
-#define  RS        PINA5    //To specify what will be written (DATA or COMMAND) (1 for DATA)(0 for COMMAND)
-//#define  RW        PINC1    //To specify READ or WRITE operation (1 for read ,,0 for write)  // in KIT it is connected direct to GND
-#define  EN        PINA7    //To tell the MP of LCD that there is a signal
+#define  RS        PINB0    //To specify what will be written (DATA or COMMAND) (1 for DATA)(0 for COMMAND)
+#define  RW        PINB1    //To specify READ or WRITE operation (1 for read ,,0 for write)  // in KIT it is connected direct to GND
+#define  EN        PINB2    //To tell the MP of LCD that there is a signal
 
 /****************************pin_configuration FOR 8 BIT***************/
 
-#define LCD_PORT   PA
+#define LCD_PORT   PC
 
 /****************************pin_configuration FOR 4 BIT***************/
 
-#define D4  PINA0
-#define D5  PINA1
-#define D6  PINA2
-#define D7  PINA3
+#define D4  PINC4
+#define D5  PINC5
+#define D6  PINC6
+#define D7  PINC7
 
 /********************from datasheet*************************/
 void LCD_Init(void); 
@@ -67,8 +73,8 @@ void LCD_Writestring(u8*str);
 /*THIS fun : is used to write string in LCD*/
 
 u8 getnum(u64 num,u8 i);
-void LCD_WriteNumber(S32  num);
-//void LCD_WriteNum_D(S32 num);
+void LCD_WriteNumber(s32  num);
+//void LCD_WriteNum_D(s32 num);
 /*THIS fun : is used to write number in decimal in LCD*/
 
 void LCD_WriteNum_Binary(u8 num);
@@ -77,10 +83,10 @@ void LCD_WriteNum_Binary(u8 num);
 void LCD_WriteNum_Binary_8bit(u8 num);
 /*THIS fun : is used to write number in binary in 8 digits (00010010) in LCD*/
 
-void lCD_DEC_BIN(S32 num);
+void lCD_DEC_BIN(s32 num);
 /*THIS fun : is used to take a number in and print it in decimal & binary in LCD*/
 
-void LCD_Writenum_4digit(S16 num);
+void LCD_Writenum_4digit(s16 num);
  /*THIS fun : is used to write number in decimal in 4 Digits*/
  
 void LCD_Writenum_2digit(u64 num);
@@ -98,4 +104,6 @@ void LCD_Dig_Hex_Bin(void);
 void LCD_Write_Float(f32 v);
 
 
- #endif /* LCD_H_ */
+
+
+#endif /* LCD2_H_ */

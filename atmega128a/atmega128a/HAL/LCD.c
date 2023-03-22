@@ -1,5 +1,5 @@
-
 #include "LCD.h"
+#include "DIO_Interface.h"
 
 #ifndef LCD_MODE
 #define LCD_MODE _8_BIT
@@ -83,7 +83,7 @@ static void LCD_write_data (u8 data)
 	DIO_Writepin(D7,READ_BIT(data,7));
 	DIO_Writepin(EN,HIGH);
 	_delay_ms(1);
-	DIO_Writepin(EN,LOW);
+	DIO_Writepin(EN, LOW);
 	_delay_ms(1);
 	
 	DIO_Writepin(D4,READ_BIT(data,0));
@@ -145,7 +145,7 @@ void LCD_Writestring(u8*str)
  u8 getnum(u64 num,u8 i)
  {
 	 u64 n=1;
-	 u8 y;
+	 // u8 y;
 	while(i>0)
 	{
 		
@@ -155,7 +155,7 @@ void LCD_Writestring(u8*str)
 	return (((num%n)/(n/10))+48);
 		  	 	 
  }
-/*void LCD_WriteNum_D(S32 num)
+/*void LCD_WriteNum_D(s32 num)
 {
 	
 	if(num==0)
@@ -184,7 +184,7 @@ void LCD_Writestring(u8*str)
 	}
 	
 }*/
-void LCD_WriteNumber(S32 num)//-2503
+void LCD_WriteNumber(s32 num)//-2503
 {
 	u8 str[20];
 	u8 rem,i=0;
@@ -205,7 +205,7 @@ void LCD_WriteNumber(S32 num)//-2503
 		num=num/10;
 		i++;
 	}
-	for (S8 j=i-1;j>=0;j--)
+	for (s8 j=i-1;j>=0;j--)
 	{
 		LCD_Writechar(str[j]);
 	}
@@ -215,7 +215,7 @@ void LCD_WriteNumber(S32 num)//-2503
 
  void LCD_WriteNum_Binary_8bit(u8 num)
 {
-	S8 i;
+	s8 i;
 		
 	for(i=7;i>=0;i--)
 	{
@@ -247,7 +247,7 @@ void LCD_WriteNumber(S32 num)//-2503
 
 void LCD_WriteNum_Binary(u8 num)
 {
-	S8 i;
+	s8 i;
 	u8 flag=0;
 	
 	for (i=7;i>=0;i--)
@@ -264,7 +264,7 @@ void LCD_WriteNum_Binary(u8 num)
 	
 }
 
-void lCD_DEC_BIN(S32 num)
+void lCD_DEC_BIN(s32 num)
 {
 		LCD_Writestring("DEC:");
 
@@ -275,7 +275,7 @@ void lCD_DEC_BIN(S32 num)
 	
 }
 
-void LCD_Writenum_4digit(S16 num)
+void LCD_Writenum_4digit(s16 num)
 {
 	
 	if(num<0)
@@ -492,5 +492,4 @@ void LCD_Write_Float(f32 v)
 	LCD_Writechar(rem+'0');
 	
 }
-
 
