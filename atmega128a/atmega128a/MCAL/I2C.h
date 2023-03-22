@@ -8,26 +8,33 @@
 
 #define I2C_BUFFER_LENGTH 32
 
-void I2C_setFrequency(u32);
+#define I2C_SETFREQ(FREQ) (TWBR = ((F_CPU / FREQ) - 16) / (2))
+
+typedef enum {
+	I2C_WRITE,
+	I2C_READ
+} I2C_DataDirection_t;
 
 /* Master Functions */
-void I2C_Master_Init();							            /* I2C initialize function */
-u8  I2C_Start(u8 write_address);							/* I2C start function */
-void I2C_StartWait(u8 write_address);						/* I2C start wait function */
-u8  I2C_RepeatedStart(u8 read_address);						/* I2C repeated start function */
-void I2C_Stop();								            /* I2C stop function */
-u8  I2C_Write(u8 data);							            /* I2C write function */
-u8 I2C_ReadAck();								            /* I2C read ack function */
-u8 I2C_ReadNack();								            /* I2C read nack function */
-u8 I2C_ReadBuffer(void);									/* I2C read buffer function */
-u8 I2C_RequestFrom(u8 address, u8 quantity);				/* I2C request from function */
-void I2C_ReadFrom(u8 address, u8 length);					/* I2C read from function */
+void I2C_Master_Init();												/* I2C initialize function */
+u8  I2C_Start(u8 address, I2C_DataDirection_t rw);					/* I2C start function */
+void I2C_StartWait(u8 address, I2C_DataDirection_t rw);				/* I2C start wait function */
+u8  I2C_RepeatedStart(u8 address, I2C_DataDirection_t rw);			/* I2C repeated start function */
+void I2C_Stop();										            /* I2C stop function */
+u8  I2C_Write(u8 data);									            /* I2C write function */
+u8 I2C_ReadAck();										            /* I2C read ack function */
+u8 I2C_ReadNack();										            /* I2C read nack function */
+u8 I2C_ReadBuffer(void);											/* I2C read buffer function */
+u8 I2C_RequestFrom(u8 address, u8 quantity);						/* I2C request from function */
+void I2C_ReadFrom(u8 address, u8 length);							/* I2C read from function */
 
 /* Slave Functions */
 void I2C_Slave_Init(u8 slave_address);					/* I2C slave initialize function with Slave address */
 u8 I2C_Slave_Listen();									/* I2C slave listen function */
 u8 I2C_Slave_Transmit(u8 data);							/* I2C slave transmit function */
 u8 I2C_Slave_Receive();									/* I2C slave receive function */
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

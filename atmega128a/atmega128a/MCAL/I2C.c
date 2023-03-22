@@ -1,52 +1,50 @@
 #include "Std_types.h"
 #include "MemMap.h"
 #include "I2C.h"								/* Include I2C header file */
+#include "LCD.h"
 
 
-u8 I2C_receivedBufferWriteIndex;
-u8 I2C_receivedBufferReadIndex;
+u8 I2C_receivedBufferIndex;
+u8 I2C_receivedBufferFilledOnce=0;
 u8 I2C_receivedBufferLength;
 u8 I2C_receivedBuffer[I2C_BUFFER_LENGTH];
 
-void I2C_SetFrequency(u32 frequency)
-{
-  TWBR = ((F_CPU / frequency) - 16) / 2;
-  
-  /* twi bit rate formula from atmega128 manual pg 204
-  SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR))
-  note: TWBR should be 10 or higher for master mode
-  It is 72 for a 16mhz Wiring board with 100kHz TWI */
-}
+#define LATE_READINGS 5
 
 /************************************************* I2C Master *************************************************/
 
 void I2C_Master_Init()										/* I2C initialize function */
 {
 	TWSR = 0x00;									
-	I2C_setFrequency(SCL_CLK);										/* Get bit rate register value by formula */
+	I2C_SETFREQ(SCL_CLK);										/* Get bit rate register value by formula */
 }	
 
-u8 I2C_Start(u8 write_address)								/* I2C start function */
+u8 I2C_Start(u8 address, I2C_DataDirection_t rw)								/* I2C start function */
 {
-	u8 status = 0xff;;										/* Declare variable */
+	u8 status;												/* Declare variable */
 	TWCR = (1<<TWSTA)|(1<<TWEN)|(1<<TWINT);					/* Enable TWI, generate start condition and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (start condition) */
 	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */
+	LCD_Writenum_Hex(status);
 	if(status != TW_START)									/* Check weather start condition transmitted successfully or not? */
-	return TW_START;										/* If not then return 0 to indicate start condition fail */
-	TWDR = write_address;									/* If yes then write SLA+W in TWI data register */
+	return 0;												/* If not then return 0 to indicate start condition fail */
+	if(rw == I2C_WRITE){									/* Check if it is write operation */
+		TWDR = address<<1;									/* If yes then write SLA+W in TWI data register */
+	}
+	else if(rw == I2C_READ){								/* Check if it is read operation */
+		TWDR = (address<<1) | 1;							/* If yes then write SLA+R in TWI data register */
+	}
+	else {
+		return 0xff;										/* If something else, return 0xff referring to error */
+	}											
 	TWCR = (1<<TWEN)|(1<<TWINT);							/* Enable TWI and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (Write operation) */
-	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */	
-	if(status == TW_MT_SLA_ACK)								/* Check weather SLA+W transmitted & ack received or not? */
-	return TW_MT_SLA_ACK;									/* If yes then return 1 to indicate ack received i.e. ready to accept data byte */
-	if(status == TW_MT_SLA_NACK)							/* Check weather SLA+W transmitted & nack received or not? */
-	return TW_MT_SLA_NACK;									/* If yes then return 2 to indicate nack received i.e. device is busy */
-	else
-	return 0xff;											/* Else return 3 to indicate SLA+W failed */
+	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */
+	LCD_Writenum_Hex(status);
+	return status;
 }
 
-void I2C_StartWait(u8 write_address)						/* I2C start wait function */
+void I2C_StartWait(u8 address, I2C_DataDirection_t rw)						/* I2C start wait function */
 {
 	u8 status;												/* Declare variable */
 	while(1)
@@ -56,7 +54,15 @@ void I2C_StartWait(u8 write_address)						/* I2C start wait function */
 		status = TWSR & 0xF8;								/* Read TWI status register with masking lower three bits */
 		if(status != TW_START)								/* Check weather start condition transmitted successfully or not? */
 		continue;											/* If no then continue with start loop again */
-		TWDR = write_address;								/* If yes then write SLA+W in TWI data register */
+		if(rw == I2C_WRITE){								/* Check if it is write operation */
+			TWDR = address<<1;								/* If yes then write SLA+W in TWI data register */
+		}
+		else if(rw == I2C_READ){							/* Check if it is read operation */
+			TWDR = (address<<1) | 1;						/* If yes then write SLA+R in TWI data register */
+		}
+		else {
+			return 0xff;									/* If something else, return 0xff referring to error */
+		}
 		TWCR = (1<<TWEN)|(1<<TWINT);						/* Enable TWI and clear interrupt flag */
 		while(!(TWCR & (1<<TWINT)));						/* Wait until TWI finish its current job (Write operation) */
 		status = TWSR & 0xF8;								/* Read TWI status register with masking lower three bits */
@@ -69,24 +75,27 @@ void I2C_StartWait(u8 write_address)						/* I2C start wait function */
 	}
 }
 
-u8 I2C_RepeatedStart(u8 read_address)						/* I2C repeated start function */
+u8 I2C_RepeatedStart(u8 address, I2C_DataDirection_t rw)	/* I2C repeated start function */
 {
-	u8 status = 0xff;;												/* Declare variable */
+	u8 status;												/* Declare variable */
 	TWCR = (1<<TWSTA)|(1<<TWEN)|(1<<TWINT);					/* Enable TWI, generate start condition and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (start condition) */
 	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */
 	if(status != TW_REP_START)								/* Check weather repeated start condition transmitted successfully or not? */
 	return 0;												/* If no then return 0 to indicate repeated start condition fail */
-	TWDR = read_address;									/* If yes then write SLA+R in TWI data register */
+	if(rw == I2C_WRITE){									/* Check if it is write operation */
+		TWDR = address<<1;									/* If yes then write SLA+W in TWI data register */
+	}
+	else if(rw == I2C_READ){								/* Check if it is read operation */
+		TWDR = (address<<1) | 1;							/* If yes then write SLA+R in TWI data register */
+	}
+	else {
+		return 0xff;										/* If something else, return 0xff referring to error */
+	}
 	TWCR = (1<<TWEN)|(1<<TWINT);							/* Enable TWI and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (Write operation) */
 	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */
-	if(status == TW_MR_SLA_ACK)								/* Check weather SLA+R transmitted & ack received or not? */
-	return TW_MR_SLA_ACK;									/* If yes then return 1 to indicate ack received */ 
-	if(status == TW_MR_SLA_NACK)							/* Check weather SLA+R transmitted & nack received or not? */
-	return TW_MR_SLA_ACK;									/* If yes then return 2 to indicate nack received i.e. device is busy */
-	else
-	return 0xff;											/* Else return 3 to indicate SLA+W failed */
+	return status;
 }
 
 void I2C_Stop()												/* I2C stop function */
@@ -101,6 +110,7 @@ u8 I2C_Write(u8 data)										/* I2C write function */
 	TWDR = data;											/* Copy data in TWI data register */
 	TWCR = (1<<TWEN)|(1<<TWINT);							/* Enable TWI and clear interrupt flag */
 	while(!(TWCR & (1<<TWINT)));							/* Wait until TWI finish its current job (Write operation) */
+	LCD_Writestring("in");
 	status = TWSR & 0xF8;									/* Read TWI status register with masking lower three bits */
 	if(status == TW_MT_DATA_ACK)							/* Check weather data transmitted & ack received or not? */
 	return TW_MT_DATA_ACK;									/* If yes then return 0 to indicate ack received */
@@ -130,13 +140,30 @@ u8 I2C_ReadNack()											/* I2C read nack function */
 u8 I2C_ReadBuffer(void)
 {
 	u8 value = -1;
+	static u8 I2C_receivedBufferReadIndex=0;
+	u8 diff;
+	diff = I2C_receivedBufferIndex - I2C_receivedBufferReadIndex;
+	if(diff >= 0){
+		if(diff > LATE_READINGS){
+			I2C_receivedBufferReadIndex = I2C_receivedBufferIndex - LATE_READINGS;
+		}
+		else {
+			I2C_receivedBufferReadIndex = I2C_receivedBufferIndex - diff;
+		}
+	}
+	else {
+		if(I2C_receivedBufferFilledOnce == 0){
+			I2C_receivedBufferReadIndex = 0;
+		}
+		else {
+			I2C_receivedBufferReadIndex = I2C_receivedBufferIndex - LATE_READINGS + I2C_BUFFER_LENGTH;
+		}
+	}
 
 	// get each successive byte on each call
-	if(I2C_receivedBufferReadIndex > I2C_receivedBufferWriteIndex){
-
-		I2C_receivedBufferReadIndex=0;
-	}
 	value = I2C_receivedBuffer[I2C_receivedBufferReadIndex++];
+	I2C_receivedBufferReadIndex %= I2C_BUFFER_LENGTH;
+
 	return value;
 }
 
@@ -148,13 +175,15 @@ u8 I2C_RequestFrom(u8 address, u8 quantity)
 		I2C_ReadFrom(address, I2C_BUFFER_LENGTH);
 		return quantity - I2C_BUFFER_LENGTH;
 	}
+	I2C_ReadFrom(address, quantity);
 	return 0;
 }
 
 void I2C_ReadFrom(u8 address, u8 length)
 {
+	I2C_Start(address, I2C_READ);
 	// initialize buffer iteration vars
-	I2C_receivedBufferWriteIndex = 0;
+	I2C_receivedBufferIndex = 0;
 	I2C_receivedBufferLength = length-1;  
 	// This is not intuitive, read on...
 	// On receive, the previously configured ACK/NACK setting is transmitted in
@@ -164,16 +193,21 @@ void I2C_ReadFrom(u8 address, u8 length)
 	// expected byte of data.
 
 	// wait for read operation to complete
-	while(I2C_receivedBufferWriteIndex < I2C_receivedBufferLength){
-		I2C_receivedBuffer[I2C_receivedBufferWriteIndex++] = I2C_ReadAck();
+	while(I2C_receivedBufferIndex < I2C_receivedBufferLength){
+		I2C_receivedBuffer[I2C_receivedBufferIndex++] = I2C_ReadAck();
 	}
-	I2C_receivedBuffer[I2C_receivedBufferWriteIndex++] = I2C_ReadNack();
+	I2C_receivedBuffer[I2C_receivedBufferIndex++] = I2C_ReadNack();
+	if(I2C_receivedBufferIndex == I2C_BUFFER_LENGTH){
+		I2C_receivedBufferFilledOnce = 1;
+	}
+	I2C_Stop();
 }
 
 
 void I2C_WriteTo(u8 address, u8* data, u8 length)
 {
 	u8 i;
+	I2C_Start(address, I2C_WRITE);
 	// ensure data will fit into buffer
 	if(I2C_BUFFER_LENGTH < length){
 		return;
@@ -183,6 +217,7 @@ void I2C_WriteTo(u8 address, u8* data, u8 length)
 	for(i = 0; i < length; ++i){
 		I2C_Write(data[i]);
 	}
+	I2C_Stop();
 }
 
 
