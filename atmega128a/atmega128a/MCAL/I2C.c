@@ -145,10 +145,10 @@ u8 I2C_ReadBuffer(void)
 	diff = I2C_receivedBufferIndex - I2C_receivedBufferReadIndex;
 	if(diff >= 0){
 		if(diff > LATE_READINGS){
-			I2C_receivedBufferReadIndex = I2C_receivedBufferIndex - LATE_READINGS;
+			I2C_receivedBufferReadIndex = I2C_receivedBufferIndex - LATE_READINGS + 1;
 		}
-		else {
-			I2C_receivedBufferReadIndex = I2C_receivedBufferIndex - diff;
+		else {																			
+			I2C_receivedBufferReadIndex = I2C_receivedBufferIndex - diff;	// can be removed
 		}
 	}
 	else {
@@ -156,7 +156,7 @@ u8 I2C_ReadBuffer(void)
 			I2C_receivedBufferReadIndex = 0;
 		}
 		else {
-			I2C_receivedBufferReadIndex = I2C_receivedBufferIndex - LATE_READINGS + I2C_BUFFER_LENGTH;
+			I2C_receivedBufferReadIndex = (I2C_receivedBufferIndex - LATE_READINGS + 1) + I2C_BUFFER_LENGTH;
 		}
 	}
 
