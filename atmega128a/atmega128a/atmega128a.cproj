@@ -44,40 +44,44 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
       <AvrGcc>
-        <avrgcc.common.Device>-mmcu=atmega128a -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega128a"</avrgcc.common.Device>
-        <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
-        <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
-        <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
-        <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
-        <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
-        <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
-        <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
-        <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
-        <avrgcc.compiler.symbols.DefSymbols>
-          <ListValues>
-            <Value>NDEBUG</Value>
-          </ListValues>
-        </avrgcc.compiler.symbols.DefSymbols>
-        <avrgcc.compiler.directories.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
-          </ListValues>
-        </avrgcc.compiler.directories.IncludePaths>
-        <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
-        <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
-        <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
-        <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
-        <avrgcc.linker.libraries.Libraries>
-          <ListValues>
-            <Value>libm</Value>
-          </ListValues>
-        </avrgcc.linker.libraries.Libraries>
-        <avrgcc.assembler.general.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
-          </ListValues>
-        </avrgcc.assembler.general.IncludePaths>
-      </AvrGcc>
+  <avrgcc.common.Device>-mmcu=atmega128a -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega128a"</avrgcc.common.Device>
+  <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>NDEBUG</Value>
+    </ListValues>
+  </avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
+      <Value>..</Value>
+      <Value>../MCAL</Value>
+      <Value>../HAL</Value>
+      <Value>../Services</Value>
+    </ListValues>
+  </avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.linker.libraries.Libraries>
+    <ListValues>
+      <Value>libm</Value>
+    </ListValues>
+  </avrgcc.linker.libraries.Libraries>
+  <avrgcc.assembler.general.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
+    </ListValues>
+  </avrgcc.assembler.general.IncludePaths>
+</AvrGcc>
     </ToolchainSettings>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -132,16 +136,43 @@
     <Compile Include="HAL\GPS.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="main\main.c">
+    <Compile Include="HAL\heartRate.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="main\MemMap.h">
+    <Compile Include="HAL\heartRate.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="main\Std_types.h">
+    <Compile Include="HAL\LCD.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="main\UTILS.h">
+    <Compile Include="HAL\LCD.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HAL\max30102.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HAL\max30102.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HAL\millis.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HAL\millis.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HAL\sensors.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HAL\sensors.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HAL\spo2.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="HAL\spo2.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="MCAL\ADC.c">
@@ -157,12 +188,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="MCAL\DIO_cfg.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="HAL\sensors.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="HAL\sensors.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="MCAL\I2C.c">
@@ -183,16 +208,24 @@
     <Compile Include="MCAL\USART1.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="MemMap.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Services\USART_Services.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Services\USART_Services.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Std_types.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="UTILS.h">
+      <SubType>compile</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="MCAL" />
-    <Folder Include="main" />
     <Folder Include="HAL" />
     <Folder Include="Services" />
   </ItemGroup>
